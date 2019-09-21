@@ -1,0 +1,236 @@
+{% load static %}
+<html ng-app="crudApp">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Crud</title>
+        <link rel="stylesheet" href="{% static 'assets/css/bootstrap.css' %}">
+        <script src="{% static 'assets/js/jquery-3.3.1.min.js' %}"></script>
+        <script src="{% static 'assets/js/bootstrap.js' %}"></script>
+        <script src="{% static 'assets/js/angular.min.js' %}"></script>
+        <script src="{% static 'assets/js/sweetalert.min.js' %}"></script>
+    </head>
+    <style>
+    .header
+    {
+    background-color: whitesmoke;
+    padding:10px;
+    }
+    </style>
+    <body ng-controller="crudController">
+        <div class="header">
+            <h4>ARKADEMY BOOTCAMP</h4>
+        </div>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="row">
+                        <div class="col-xs-12 col-md-6 col-md-offset-3" style="padding: 10px;margin-top:150px;">
+                            <button class="btn btn-success" style="margin-bottom: 20px;" data-toggle="modal" data-target="#myModal">ADD</button>
+                            <div id="myModal" class="modal fade" role="dialog">
+                                <div class="modal-dialog">
+                                    <!-- konten modal-->
+                                    <div class="modal-content">
+                                        <!-- heading modal -->
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                            <h4 class="modal-title">{@ title@} </h4>
+                                        </div>
+                                        <!-- body modal -->
+                                        <div class="modal-body">
+                                            <div class="form-group">
+                                                <input type="text" placeholder="Name" id="nama" class="form-control">
+                                            </div>
+                                            <div class="form-group">
+                                                <select id="work" class="form-control">
+                                                   
+                                                    <option value=""> Work </option>
+                                                    <option ng-repeat="b in work" value="{@b.id@}">{@b.nama@}</option>
+                                                </select>
+                                            </div>
+                                            <div class="form-group">
+                                                <select id="kategori" class="form-control">
+                                                 
+                                                    <option value=""> Salary </option>
+                                                    <option ng-repeat="c in kategori" value="{@c.id@}">{@c.salary@}</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <!-- footer modal -->
+                                        <div class="modal-footer">
+                                            <button class="btn btn-warning" ng-click="simpan()">{@title@}</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <table class="table table-responsive table-striped">
+                                <tr>
+                                    <th>Nama</th>
+                                    <th>Work</th>
+                                    <th>Salary</th>
+                                    <th>Action</th>
+                                </tr>
+                                <tr ng-repeat="a in data">
+                                    <td>{@ a[1] @}</td>
+                                    <td>{@ a[2] @}</td>
+                                    <td>{@ a[3] @}</td>
+                                    <td>
+                                        <span class="glyphicon glyphicon-edit btn btn-warning" data-toggle="modal" data-target="#myModal" ng-click="edit(a[0])"></span>
+                                        <span class="glyphicon glyphicon-trash btn btn-danger" ng-click="hapus(a[0])"></span>
+                                        
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script>
+        var loginApp=angular.module("crudApp",[]);
+        loginApp.config(function($interpolateProvider) {
+        $interpolateProvider.startSymbol('{@');
+        $interpolateProvider.endSymbol('@}');
+        });
+        loginApp.controller("crudController",function($scope,$http)
+        {
+        var work=document.getElementById("work")
+        var nama=document.getElementById("nama")
+        var kategori=document.getElementById("kategori")
+        var aksi=0;
+        var tempid;
+
+       
+        $scope.tampil=function()
+        {
+                $http({
+                method: 'POST',
+                url: 'http://localhost:8000/tampil/',
+                }).then(function(e) {
+                $scope.data=e.data
+                $scope.title="ADD DATA";
+                nama.value="";
+                aksi=0;
+
+        });
+        }
+        $scope.tampil();
+        $http({
+        method: 'POST',
+        url: 'http://localhost:8000/work/',
+        }).then(function(e) {
+        $scope.work=e.data
+        });
+        $http({
+        method: 'POST',
+        url: 'http://localhost:8000/kategori/',
+        }).then(function(e) {
+        $scope.kategori=e.data
+        });
+
+        $scope.simpan=function()
+        {
+            if(aksi > 0)
+            {
+                json={nama:nama.value,id_work:work.value,id_salary:kategori.value,id:tempid}
+                $http({
+                method: 'POST',
+                url: 'http://localhost:8000/perbarui/',
+                data:json
+            }).then(function(e) {
+                var x=e.data.message;
+                if(x > 0)
+                {
+                    swal({
+                        text:"perbarui data "+nama.value+" berhasil",
+                        icon:"success"
+                    })
+                    $scope.tampil();
+                }
+                else
+                {
+                        swal({
+                        text:"Perbarui data gagal",
+                        icon:"error"
+                    })
+                }
+            });  
+            }
+            else
+            {
+                json={nama:nama.value,id_work:work.value,id_salary:kategori.value}
+            $http({
+            method: 'POST',
+            url: 'http://localhost:8000/simpan/',
+            data:json
+            }).then(function(e) {
+                var x=e.data.message;
+                if(x > 0)
+                {
+                    swal({
+                        text:"Simpan data berhasil",
+                        icon:"success"
+                    })
+                    $scope.tampil();
+                }
+                else
+                {
+                        swal({
+                        text:"Simpan data gagal",
+                        icon:"error"
+                    })
+                }
+            });   
+            }
+
+           
+        }
+
+        $scope.edit=function(id)
+        {
+            tempid=id;
+            $scope.title="EDIT DATA";
+            aksi=1;
+            json={id:id}
+            $http({
+            method: 'POST',
+            url: 'http://localhost:8000/edit/',
+            data:json
+            }).then(function(e) {
+               nama.value=e.data[1]
+               work.value=e.data[4];
+               kategori.value=e.data[5]
+            });    
+        }
+          $scope.hapus=function(id)
+        {
+            $scope.title="EDIT DATA";
+            json={id:id}
+            $http({
+            method: 'POST',
+            url: 'http://localhost:8000/hapus/',
+            data:json
+            }).then(function(e) {
+               var x=e.data.message;
+                if(x > 0)
+                {
+                    swal({
+                        text:"data "+nama.value+" berhasil dihapus",
+                        icon:"success"
+                    })
+                    $scope.tampil();
+                }
+                else
+                {
+                        swal({
+                        text:"data "+nama.value+" gagal dihapus",
+                        icon:"error"
+                    })
+                }
+            });    
+        }
+        });
+        </script>
+        
+    </body>
+</html>
